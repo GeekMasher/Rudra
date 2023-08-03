@@ -44,7 +44,10 @@ impl<'tcx> UnsafeDestructorChecker<'tcx> {
 
     pub fn analyze(&mut self) {
         fn drop_trait_def_id<'tcx>(tcx: TyCtxt<'tcx>) -> AnalysisResult<'tcx, DefId> {
-            convert!(tcx.lang_items().drop_trait().context(DropTraitNotFound))
+            convert!(tcx
+                .lang_items()
+                .drop_trait()
+                .context(UnsafeDestructorError::DropTraitNotFound))
         }
 
         // key is DefId of trait, value is vec of HirId
@@ -111,12 +114,12 @@ mod inner {
                         let drop_fn_impl_item_id = drop_fn_item_ref.id;
                         return visitor.check_impl_item(drop_fn_impl_item_id);
                     }
-                    log_err!(UnexpectedDropItem);
+                    log_err!(UnsafeDestructorError::UnexpectedDropItem);
                     return false;
                 }
             }
 
-            log_err!(InvalidHirId);
+            log_err!(UnsafeDestructorError::InvalidHirId);
             false
         }
 
@@ -125,7 +128,7 @@ mod inner {
             if let ImplItemKind::Fn(_sig, body_id) = &impl_item.kind {
                 self.check_body(*body_id)
             } else {
-                log_err!(UnexpectedDropItem);
+                log_err!(UnsafeDestructorError::UnexpectedDropItem);
                 false
             }
         }

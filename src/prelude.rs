@@ -59,7 +59,7 @@ impl<'tcx> TyCtxtExtension<'tcx> {
                 let sig = substs.as_closure().sig();
                 Ok(sig.unsafety())
             }
-            _ => convert!(NonFunctionType.fail()),
+            _ => convert!(ExtError::NonFunctionType.fail()),
         }
     }
 
@@ -136,7 +136,7 @@ impl<'tcx> TyCtxtExtension<'tcx> {
                 }
 
                 // This shouldn't ever be needed, but just in case:
-                with_no_trimmed_paths(|| {
+                with_no_trimmed_paths!(|| {
                     Ok(vec![match trait_ref {
                         Some(trait_ref) => Symbol::intern(&format!("{:?}", trait_ref)),
                         None => Symbol::intern(&format!("<{}>", self_ty)),
@@ -155,7 +155,7 @@ impl<'tcx> TyCtxtExtension<'tcx> {
 
                 // This shouldn't ever be needed, but just in case:
                 path.push(match trait_ref {
-                    Some(trait_ref) => with_no_trimmed_paths(|| {
+                    Some(trait_ref) => with_no_trimmed_paths!(|| {
                         Symbol::intern(&format!(
                             "<impl {} for {}>",
                             trait_ref.print_only_trait_path(),
@@ -163,7 +163,7 @@ impl<'tcx> TyCtxtExtension<'tcx> {
                         ))
                     }),
                     None => {
-                        with_no_trimmed_paths(|| Symbol::intern(&format!("<impl {}>", self_ty)))
+                        with_no_trimmed_paths!(|| Symbol::intern(&format!("<impl {}>", self_ty)))
                     }
                 });
 
@@ -221,7 +221,7 @@ impl<'tcx> ExprExtension<'tcx> {
     /// Returns `None` if expression is not a function or error happens
     pub fn as_fn_def_id(self, tcx: TyCtxt<'tcx>) -> Option<DefId> {
         if !tcx.has_typeck_results(self.expr.hir_id.owner) {
-            log_err!(InvalidOwner);
+            log_err!(ExtError::InvalidOwner);
             return None;
         }
 
@@ -234,18 +234,18 @@ impl<'tcx> ExprExtension<'tcx> {
                     match res {
                         Res::Def(_def_kind, def_id) => Some(def_id),
                         _ => {
-                            log_err!(UnhandledCall);
+                            log_err!(ExtError::UnhandledCall);
                             None
                         }
                     }
                 }
                 ExprKind::Field(..) => {
                     // Example: (self.0)(self.1, self.2);
-                    log_err!(UnsupportedCall);
+                    log_err!(ExtError::UnsupportedCall);
                     None
                 }
                 _ => {
-                    log_err!(UnhandledCall);
+                    log_err!(ExtError::UnsupportedCall);
                     None
                 }
             },

@@ -58,7 +58,7 @@ impl<'tcx> UnsafeDataflowChecker<'tcx> {
                     && behavior_flag.report_level() >= self.rcx.report_level()
                 {
                     let mut color_span = unwrap_or!(
-                        utils::ColorSpan::new(tcx, related_item_span).context(InvalidSpan) => continue
+                        utils::ColorSpan::new(tcx, related_item_span).context(UnsafeDataflowError::InvalidSpan) => continue
                     );
 
                     for &span in status.strong_bypass_spans() {
@@ -229,7 +229,7 @@ mod inner {
                                 callee_did,
                                 callee_substs,
                             ) {
-                                Err(_e) => log_err!(ResolveError),
+                                Err(_e) => log_err!(UnsafeDataflowError::ResolveError),
                                 Ok(Some(_)) => {
                                     // Calls were successfully resolved
                                 }

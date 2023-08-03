@@ -20,7 +20,6 @@ use rustc_middle::ty::{
     subst::{self, GenericArgKind},
     AssocKind, GenericParamDef, GenericParamDefKind, List, PredicateKind, Ty, TyCtxt, TyS,
 };
-use rustc_span::symbol::sym;
 
 use snafu::{OptionExt, Snafu};
 
@@ -145,22 +144,31 @@ impl<'tcx> SendSyncVarianceChecker<'tcx> {
 fn send_trait_def_id<'tcx>(tcx: TyCtxt<'tcx>) -> AnalysisResult<'tcx, DefId> {
     convert!(tcx
         .get_diagnostic_item(sym::send_trait)
-        .context(SendTraitNotFound))
+        .context(SendSyncVarianceError::SendTraitNotFound))
 }
 
 /// Check Sync Trait
 fn sync_trait_def_id<'tcx>(tcx: TyCtxt<'tcx>) -> AnalysisResult<'tcx, DefId> {
-    convert!(tcx.lang_items().sync_trait().context(SyncTraitNotFound))
+    convert!(tcx
+        .lang_items()
+        .sync_trait()
+        .context(SendSyncVarianceError::SyncTraitNotFound))
 }
 
 /// Check Copy Trait
 fn copy_trait_def_id<'tcx>(tcx: TyCtxt<'tcx>) -> AnalysisResult<'tcx, DefId> {
-    convert!(tcx.lang_items().copy_trait().context(CopyTraitNotFound))
+    convert!(tcx
+        .lang_items()
+        .copy_trait()
+        .context(SendSyncVarianceError::CopyTraitNotFound))
 }
 
 /// Check Clone Trait
 fn _clone_trait_def_id<'tcx>(tcx: TyCtxt<'tcx>) -> AnalysisResult<'tcx, DefId> {
-    convert!(tcx.lang_items().clone_trait().context(CloneTraitNotFound))
+    convert!(tcx
+        .lang_items()
+        .clone_trait()
+        .context(SendSyncVarianceError::CloneTraitNotFound))
 }
 
 #[derive(Debug, Snafu)]
